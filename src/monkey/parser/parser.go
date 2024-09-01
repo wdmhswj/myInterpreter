@@ -7,14 +7,41 @@ import (
 	"monkey/token"
 )
 
+// 定义运算符的优先级
+const (
+	_ int = iota
+	LOWEST
+	EQUALS // ==
+	LESSGREATER // < or >
+	SUM // +
+	PRODUCT // *
+	PREFIX // -X or !X
+	CALL // myFunction(X)
+)
+
+
 type Parser struct {
 	l *lexer.Lexer
 
 	errors []string
 	curToken token.Token
 	peekToken token.Token
+
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns map[token.TokenType]infixParseFn
 }
 
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn func(ast.Expression) ast.Expression	// 函数参数为中缀运算符左侧的内容
+)
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
+}
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l: l,
@@ -53,9 +80,22 @@ func (p *Parser) parseStatement() ast.Statement {
 	switch p.curToken.Type {
 	case token.LET:
 		return p.parseLetStatement()
+	case token.RETURN:
+		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
+}
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseExpresion(LOWEST)
+	
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
 }
 
 func (p *Parser) parseLetStatement() *ast.LetStatement {
@@ -70,6 +110,18 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 	if !p.expectPeek(token.ASSIGN) {
 		return nil
 	}
+
+	// TODO: 跳过对表达式的处理，直到遇到分号
+	for !p.curTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
+	stmt := &ast.ReturnStatement{Token: p.curToken}
+
+	p.nextToken()
 
 	// TODO: 跳过对表达式的处理，直到遇到分号
 	for !p.curTokenIs(token.SEMICOLON) {
