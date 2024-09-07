@@ -24,21 +24,6 @@ type Program struct {
 	Statements []Statement
 }
 
-func (p *Program) TokenLiteral() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].TokenLiteral()
-	} else {
-		return ""
-	}
-}
-
-func (p *Program) String() string {
-	var out bytes.Buffer
-	for _, s := range p.Statements {
-		out.WriteString(s.String())
-	}
-	return out.String()
-}
 
 type LetStatement struct {
 	Token token.Token	// token.LET词法单元
@@ -55,6 +40,35 @@ type ExpressionStatement struct {
 	Token token.Token 	// 该表达式中的第一个词法单元
 	Expression Expression
 }
+
+
+type Identifier struct {
+	Token token.Token	// token.IDENT词法单元
+	Value string
+}
+
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
+}
+
+func (p *Program) TokenLiteral() string {
+	if len(p.Statements) > 0 {
+		return p.Statements[0].TokenLiteral()
+	} else {
+		return ""
+	}
+}
+
+func (p *Program) String() string {
+	var out bytes.Buffer
+	for _, s := range p.Statements {
+		out.WriteString(s.String())
+	}
+	return out.String()
+}
+
+
 
 func (es *ExpressionStatement) statementNode () {}
 
@@ -107,13 +121,6 @@ func (ls *LetStatement) String() string {
 	return out.String()
 }
 
-
-type Identifier struct {
-	Token token.Token	// token.IDENT词法单元
-	Value string
-}
-
-
 // Identifier struct 实现了 Expression interface 接口
 func (i *Identifier) expressionNode() {}
 
@@ -123,4 +130,15 @@ func (i *Identifier) TokenLiteral() string {
 
 func (i *Identifier) String() string {
 	return i.Value
+}
+
+func (il *IntegerLiteral) expressionNode() {
+	
+}
+func (il *IntegerLiteral) TokenLiteral() string {
+	return il.Token.Literal
+}
+
+func (il* IntegerLiteral) String() string {
+	return il.Token.Literal
 }
