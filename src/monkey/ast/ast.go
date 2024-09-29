@@ -52,6 +52,21 @@ type IntegerLiteral struct {
 	Value int64
 }
 
+type PrefixExpression struct {
+	Token token.Token // 前缀词法单元，如!
+	Operator string
+	Right Expression
+}
+
+type InfixExpression struct {
+	Token token.Token // 运算符词法单元，如+
+	Left Expression
+	Operator string
+	Right Expression
+}
+
+
+
 func (p *Program) TokenLiteral() string {
 	if len(p.Statements) > 0 {
 		return p.Statements[0].TokenLiteral()
@@ -142,3 +157,39 @@ func (il *IntegerLiteral) TokenLiteral() string {
 func (il* IntegerLiteral) String() string {
 	return il.Token.Literal
 }
+
+func (pe *PrefixExpression) expressionNode() {}
+
+func (pe *PrefixExpression) TokenLiteral() string {
+	return pe.Token.Literal
+}
+
+func (pe *PrefixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(pe.Operator)
+	out.WriteString(pe.Right.String())
+	out.WriteString(")")
+	
+	return out.String()
+}
+
+func (ie *InfixExpression) expressionNode() {}
+
+func (ie *InfixExpression) TokenLiteral() string {
+	return ie.Token.Literal
+}
+
+func (ie *InfixExpression) String() string {
+	var out bytes.Buffer
+
+	out.WriteString("(")
+	out.WriteString(ie.Left.String())
+	out.WriteString(" " + ie.Operator + " ")
+	out.WriteString(ie.Right.String())
+	out.WriteString(")")
+	
+	return out.String()
+}
+
